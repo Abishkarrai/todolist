@@ -1,0 +1,88 @@
+@model TodoList.ViewModels.TodoDashboardViewModel
+
+@{
+    ViewData["Title"] = "Tasks";
+}
+
+<section class="dashboard">
+    <div class="panel">
+        <h1 class="panel-title">Track what matters</h1>
+        <p class="panel-copy">
+            Create tasks, mark them complete, and keep everything persisted in MongoDB.
+        </p>
+
+        <form asp-action="Create" method="post" class="todo-form" novalidate>
+            <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="NewItem.Title" class="form-label">New task</label>
+                <input asp-for="NewItem.Title" class="form-control" placeholder="Draft release notes" />
+                <span asp-validation-for="NewItem.Title" class="small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-brand w-100 py-2">Add task</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div class="summary-grid">
+            <article class="summary-card">
+                <span class="summary-card__label">Total tasks</span>
+                <strong class="summary-card__value">@Model.Items.Count</strong>
+            </article>
+            <article class="summary-card">
+                <span class="summary-card__label">Open</span>
+                <strong class="summary-card__value">@Model.OpenCount</strong>
+            </article>
+            <article class="summary-card">
+                <span class="summary-card__label">Completed</span>
+                <strong class="summary-card__value">@Model.CompletedCount</strong>
+            </article>
+        </div>
+
+        @if (Model.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <h2 class="panel-title">No tasks yet</h2>
+                <p class="mb-0">Add your first item to create the MongoDB collection and start tracking work.</p>
+            </div>
+        }
+        else
+        {
+            <div class="task-list">
+                @foreach (var item in Model.Items)
+                {
+                    var statusClass = item.IsCompleted ? "status-pill status-pill--done" : "status-pill status-pill--open";
+                    var cardClass = item.IsCompleted ? "task-card task-card--completed" : "task-card";
+                    var toggleLabel = item.IsCompleted ? "Mark as open" : "Mark complete";
+
+                    <article class="@cardClass">
+                        <div>
+                            <span class="@statusClass">@(item.IsCompleted ? "Completed" : "Open")</span>
+                            <h2 class="task-card__title">@item.Title</h2>
+                            <p class="task-card__meta">
+                                Added @item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                            </p>
+                        </div>
+
+                        <div class="task-card__actions">
+                            <form asp-action="ToggleCompleted" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="task-action">@toggleLabel</button>
+                            </form>
+
+                            <form asp-action="Delete" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="task-action task-action-danger">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

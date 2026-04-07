@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
+    <UserSecretsId>TodoList-9980c6ee-f31b-490a-b59c-8ce38d926f94</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="3.7.1" />
+  </ItemGroup>
+
+</Project>

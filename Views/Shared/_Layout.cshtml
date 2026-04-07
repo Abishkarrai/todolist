@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Todo List</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TodoList.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="container app-header__inner">
+                <div>
+                    <a class="app-brand" asp-area="" asp-controller="Tasks" asp-action="Index">Todo List</a>
+                    <p class="app-subtitle">ASP.NET Core MVC + MongoDB</p>
+                </div>
+            </div>
+        </header>
+
+        <main role="main" class="container pb-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
