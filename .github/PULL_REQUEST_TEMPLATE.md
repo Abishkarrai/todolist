@@ -1,12 +1,12 @@
 ## Summary
 - Change type: Feature / Fix / Refactor / Security / Infrastructure
 - Business context:
-- Related ticket:
+- Related ticket: 
 
 ## Work Item / Traceability
 <!-- Mandatory for audit -->
-- Jira / Azure DevOps ID:
-- Link:
+- Jira / Azure DevOps ID: 
+- Link: 
 
 ## Security Checklist
 - [ ] No hardcoded secrets (validated by Gitleaks)
