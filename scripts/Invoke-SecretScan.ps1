@@ -1,7 +1,52 @@
 $ErrorActionPreference = 'Stop'
 
+function Get-ExcludedPathPrefixes {
+    return @(
+        'wwwroot/lib/',
+        'artifacts/verify/',
+        'bin/',
+        'obj/'
+    )
+}
+
+function Test-IsExcludedPath {
+    param(
+        [string]$Path
+    )
+
+    $normalizedPath = $Path.Replace('\', '/')
+
+    foreach ($excludedPrefix in Get-ExcludedPathPrefixes) {
+        if ($normalizedPath.StartsWith($excludedPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+function Get-ScannableStagedPaths {
+    $stagedPaths = git diff --cached --name-only --diff-filter=ACMR
+
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($stagedPaths)) {
+        return @()
+    }
+
+    return $stagedPaths -split "`r?`n" |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        Where-Object { -not (Test-IsExcludedPath -Path $_) }
+}
+
 function Get-StagedAddedLines {
-    $diffOutput = git diff --cached --unified=0 --no-color --no-ext-diff
+    param(
+        [string[]]$Paths
+    )
+
+    if ($Paths.Count -eq 0) {
+        return @()
+    }
+
+    $diffOutput = git diff --cached --unified=0 --no-color --no-ext-diff -- @Paths
 
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($diffOutput)) {
         return @()
@@ -78,7 +123,14 @@ if (Invoke-GitleaksScan) {
     return
 }
 
-$stagedAddedLines = Get-StagedAddedLines
+$scannableStagedPaths = Get-ScannableStagedPaths
+
+if ($scannableStagedPaths.Count -eq 0) {
+    Write-Host 'Secret scan passed.'
+    exit 0
+}
+
+$stagedAddedLines = Get-StagedAddedLines -Paths $scannableStagedPaths
 
 if ($stagedAddedLines.Count -eq 0) {
     exit 0

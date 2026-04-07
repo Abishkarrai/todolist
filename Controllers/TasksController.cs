@@ -23,7 +23,9 @@ public sealed class TasksController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateTodoItemInputModel input, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create(
+        [Bind(Prefix = "NewItem")] CreateTodoItemInputModel input,
+        CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
