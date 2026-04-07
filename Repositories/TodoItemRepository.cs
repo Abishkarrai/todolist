@@ -24,9 +24,37 @@ public sealed class TodoItemRepository : ITodoItemRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<TodoItem?> GetByIdAsync(string id, CancellationToken cancellationToken)
+    {
+        if (!ObjectId.TryParse(id, out _))
+        {
+            return null;
+        }
+
+        return await _todoItems
+            .Find(todoItem => todoItem.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public Task CreateAsync(TodoItem item, CancellationToken cancellationToken)
     {
         return _todoItems.InsertOneAsync(item, cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> UpdateTitleAsync(string id, string title, CancellationToken cancellationToken)
+    {
+        if (!ObjectId.TryParse(id, out _))
+        {
+            return false;
+        }
+
+        var update = Builders<TodoItem>.Update.Set(todoItem => todoItem.Title, title);
+        var result = await _todoItems.UpdateOneAsync(
+            todoItem => todoItem.Id == id,
+            update,
+            cancellationToken: cancellationToken);
+
+        return result.MatchedCount > 0;
     }
 
     public async Task<bool> ToggleCompletedAsync(string id, CancellationToken cancellationToken)

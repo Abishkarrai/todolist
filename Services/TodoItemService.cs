@@ -17,6 +17,19 @@ public sealed class TodoItemService : ITodoItemService
         return _todoItemRepository.GetAllAsync(cancellationToken);
     }
 
+    public Task<TodoItem?> GetByIdAsync(string id, CancellationToken cancellationToken)
+    {
+        return _todoItemRepository.GetByIdAsync(id, cancellationToken);
+    }
+
+    public Task<bool> UpdateAsync(EditTodoItemInputModel input, CancellationToken cancellationToken)
+    {
+        return _todoItemRepository.UpdateTitleAsync(
+            input.Id,
+            input.Title.Trim(),
+            cancellationToken);
+    }
+
     public Task<bool> ToggleCompletedAsync(string id, CancellationToken cancellationToken)
     {
         return _todoItemRepository.ToggleCompletedAsync(id, cancellationToken);
