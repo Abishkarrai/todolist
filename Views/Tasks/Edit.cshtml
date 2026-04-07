@@ -1,0 +1,52 @@
+@model TodoList.ViewModels.EditTodoItemViewModel
+
+@{
+    ViewData["Title"] = "Edit Task";
+}
+
+<section class="dashboard">
+    <div class="panel">
+        <a asp-action="Index" class="task-action">&larr; Back to tasks</a>
+        <h1 class="panel-title mt-3">Edit task</h1>
+        <p class="panel-copy">
+            Update the task title and keep the rest of the task details unchanged.
+        </p>
+
+        <form asp-action="Edit" method="post" class="todo-form" novalidate>
+            <input asp-for="Item.Id" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Item.Title" class="form-label">Task title</label>
+                <input asp-for="Item.Title" class="form-control" placeholder="Revise sprint backlog" />
+                <span asp-validation-for="Item.Title" class="small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-brand px-4">Save changes</button>
+                <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">Current status</h2>
+
+        <article class="task-card @(Model.IsCompleted ? "task-card--completed" : string.Empty)">
+            <div>
+                <span class="@(Model.IsCompleted ? "status-pill status-pill--done" : "status-pill status-pill--open")">
+                    @(Model.IsCompleted ? "Completed" : "Open")
+                </span>
+                <h2 class="task-card__title">@Model.Item.Title</h2>
+                <p class="task-card__meta">
+                    Added @Model.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                </p>
+            </div>
+        </article>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
