@@ -48,8 +48,8 @@ jobs:
         shell: pwsh
         run: |
           $testProjects = @'
-${{ steps.discover-tests.outputs.test_projects }}
-'@ -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 }
+          ${{ steps.discover-tests.outputs.test_projects }}
+          '@ -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 }
 
           foreach ($project in $testProjects) {
             Write-Host "Running tests for $project"
