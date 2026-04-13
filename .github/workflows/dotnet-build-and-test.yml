@@ -1,0 +1,62 @@
+name: .NET Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore TodoList.sln
+
+      - name: Build
+        run: dotnet build TodoList.sln --configuration Release --no-restore
+
+      - name: Discover test projects
+        id: discover-tests
+        shell: pwsh
+        run: |
+          $testProjects = @(Get-ChildItem -Path . -Recurse -Filter '*Tests.csproj' | Select-Object -ExpandProperty FullName)
+
+          if ($testProjects.Count -eq 0) {
+            Write-Host 'No test projects found.'
+            "has_tests=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            return
+          }
+
+          "has_tests=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "test_projects<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $testProjects | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Run unit tests
+        if: steps.discover-tests.outputs.has_tests == 'true'
+        shell: pwsh
+        run: |
+          $testProjects = @'
+${{ steps.discover-tests.outputs.test_projects }}
+'@ -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 }
+
+          foreach ($project in $testProjects) {
+            Write-Host "Running tests for $project"
+            dotnet test $project --configuration Release --no-build
+          }
+
+      - name: Warn when no test project exists
+        if: steps.discover-tests.outputs.has_tests != 'true'
+        run: |
+          echo "No test project was found. Add a *Tests.csproj project to enable unit test execution."

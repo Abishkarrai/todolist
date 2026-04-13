@@ -4,8 +4,8 @@
 - **Business context:**  
 
 ## Work Item / Traceability
-- **Jira / Azure DevOps ID:**  
-- **Link:**  
+- **Jira / Azure DevOps ID (required):**  
+- **Link (required):**  
 
 ## Risk / Impact
 - **Risk level:** Low / Medium / High
