@@ -20,7 +20,7 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Build all solutions
+      - name: Restore all solutions
         shell: pwsh
         run: |
           $solutionFiles = @(Get-ChildItem -Path . -Recurse -Filter '*.sln' | Select-Object -ExpandProperty FullName)
@@ -32,7 +32,32 @@ jobs:
           foreach ($solutionFile in $solutionFiles) {
             Write-Host "Restoring $solutionFile"
             dotnet restore $solutionFile
+          }
 
+      - name: Verify formatting
+        shell: pwsh
+        run: |
+          $solutionFiles = @(Get-ChildItem -Path . -Recurse -Filter '*.sln' | Select-Object -ExpandProperty FullName)
+
+          if ($solutionFiles.Count -eq 0) {
+            throw 'No solution files were found.'
+          }
+
+          foreach ($solutionFile in $solutionFiles) {
+            Write-Host "Checking formatting for $solutionFile"
+            dotnet format $solutionFile --verify-no-changes --configuration Release
+          }
+
+      - name: Build all solutions
+        shell: pwsh
+        run: |
+          $solutionFiles = @(Get-ChildItem -Path . -Recurse -Filter '*.sln' | Select-Object -ExpandProperty FullName)
+
+          if ($solutionFiles.Count -eq 0) {
+            throw 'No solution files were found.'
+          }
+
+          foreach ($solutionFile in $solutionFiles) {
             Write-Host "Building $solutionFile"
             dotnet build $solutionFile --configuration Release --no-restore
           }
