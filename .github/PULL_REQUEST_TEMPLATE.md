@@ -37,3 +37,6 @@
 - **Feature flag required:** Yes / No
 - **Post-deployment checks:**  
 
+## Additional Notes
+- **Screenshots / logs / evidence:**  
+- **Known limitations / follow-up work:**  
