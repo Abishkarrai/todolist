@@ -1,11 +1,11 @@
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Microsoft.Extensions.Logging;
 using TodoList.Configuration;
 using TodoList.Repositories;
 using TodoList.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddOptions<MongoDbSettings>()
@@ -15,15 +15,15 @@ builder.Services
 
 builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
 {
-    var settings = serviceProvider
+    MongoDbSettings settings = serviceProvider
         .GetRequiredService<Microsoft.Extensions.Options.IOptions<MongoDbSettings>>()
         .Value;
 
-    var logger = serviceProvider
+    ILogger logger = serviceProvider
         .GetRequiredService<ILoggerFactory>()
         .CreateLogger("TodoList.MongoDb");
 
-    var client = new MongoClient(settings.ConnectionString);
+    IMongoClient client = new MongoClient(settings.ConnectionString);
     EnsureMongoConnectivity(client, settings.DatabaseName, logger, settings.ConnectionString);
     return client;
 });
@@ -32,7 +32,7 @@ builder.Services.AddScoped<ITodoItemRepository, TodoItemRepository>();
 builder.Services.AddScoped<ITodoItemService, TodoItemService>();
 builder.Services.AddControllersWithViews();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -63,30 +63,30 @@ static void EnsureMongoConnectivity(
     ILogger logger,
     string connectionString)
 {
-    var preview = BuildConnectionPreview(connectionString);
+    string preview = BuildConnectionPreview(connectionString);
 
     try
     {
-        var database = client.GetDatabase(databaseName);
+        IMongoDatabase database = client.GetDatabase(databaseName);
         database.RunCommand<BsonDocument>(new BsonDocument("ping", 1));
     }
     catch (MongoAuthenticationException authenticationException)
     {
-        logger.LogError(authenticationException, "MongoDB authentication failed during startup (preview: {preview})", preview);
+        StartupLogMessages.MongoAuthenticationFailed(logger, preview, authenticationException);
         throw new InvalidOperationException(
             "MongoDB authentication failed. Update MongoDb:ConnectionString so the SCRAM-SHA-1 credentials match your server.",
             authenticationException);
     }
     catch (MongoConfigurationException configurationException)
     {
-        logger.LogError(configurationException, "MongoDB configuration failed during startup (preview: {preview})", preview);
+        StartupLogMessages.MongoConfigurationFailed(logger, preview, configurationException);
         throw new InvalidOperationException(
             "MongoDB configuration is invalid. Ensure MongoDb:ConnectionString is a valid MongoDB URI.",
             configurationException);
     }
     catch (MongoException mongoException)
     {
-        logger.LogError(mongoException, "Unable to reach MongoDB during startup (preview: {preview})", preview);
+        StartupLogMessages.MongoConnectivityFailed(logger, preview, mongoException);
         throw new InvalidOperationException(
             "Unable to connect to MongoDB. Confirm the server is reachable and the connection string is correct.",
             mongoException);
@@ -103,4 +103,25 @@ static string BuildConnectionPreview(string connectionString)
     return connectionString.Length <= 32
         ? connectionString
         : $"{connectionString[..32]}...";
+}
+
+internal static partial class StartupLogMessages
+{
+    [LoggerMessage(
+        EventId = 1001,
+        Level = LogLevel.Error,
+        Message = "MongoDB authentication failed during startup (preview: {preview})")]
+    internal static partial void MongoAuthenticationFailed(ILogger logger, string preview, Exception exception);
+
+    [LoggerMessage(
+        EventId = 1002,
+        Level = LogLevel.Error,
+        Message = "MongoDB configuration failed during startup (preview: {preview})")]
+    internal static partial void MongoConfigurationFailed(ILogger logger, string preview, Exception exception);
+
+    [LoggerMessage(
+        EventId = 1003,
+        Level = LogLevel.Error,
+        Message = "Unable to reach MongoDB during startup (preview: {preview})")]
+    internal static partial void MongoConnectivityFailed(ILogger logger, string preview, Exception exception);
 }

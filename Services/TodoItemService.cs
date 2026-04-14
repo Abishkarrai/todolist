@@ -42,7 +42,7 @@ public sealed class TodoItemService : ITodoItemService
 
     public Task CreateAsync(CreateTodoItemInputModel input, CancellationToken cancellationToken)
     {
-        var todoItem = new TodoItem
+        TodoItem todoItem = new TodoItem
         {
             Title = input.Title.Trim(),
             CreatedAtUtc = DateTime.UtcNow,
