@@ -20,43 +20,33 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Restore
-        run: dotnet restore TodoList.sln
+      - name: Build all solutions
+        shell: pwsh
+        run: |
+          $solutionFiles = @(Get-ChildItem -Path . -Recurse -Filter '*.sln' | Select-Object -ExpandProperty FullName)
 
-      - name: Build
-        run: dotnet build TodoList.sln --configuration Release --no-restore
+          if ($solutionFiles.Count -eq 0) {
+            throw 'No solution files were found.'
+          }
 
-      - name: Discover test projects
-        id: discover-tests
+          foreach ($solutionFile in $solutionFiles) {
+            Write-Host "Restoring $solutionFile"
+            dotnet restore $solutionFile
+
+            Write-Host "Building $solutionFile"
+            dotnet build $solutionFile --configuration Release --no-restore
+          }
+
+      - name: Run all unit test projects
         shell: pwsh
         run: |
           $testProjects = @(Get-ChildItem -Path . -Recurse -Filter '*Tests.csproj' | Select-Object -ExpandProperty FullName)
 
           if ($testProjects.Count -eq 0) {
-            Write-Host 'No test projects found.'
-            "has_tests=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-            return
+            throw 'No test projects were found. Add at least one *Tests.csproj project.'
           }
 
-          "has_tests=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "test_projects<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          $testProjects | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-
-      - name: Run unit tests
-        if: steps.discover-tests.outputs.has_tests == 'true'
-        shell: pwsh
-        run: |
-          $testProjects = @'
-          ${{ steps.discover-tests.outputs.test_projects }}
-          '@ -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 }
-
-          foreach ($project in $testProjects) {
-            Write-Host "Running tests for $project"
-            dotnet test $project --configuration Release --no-build
+          foreach ($testProject in $testProjects) {
+            Write-Host "Running tests for $testProject"
+            dotnet test $testProject --configuration Release --no-build
           }
-
-      - name: Warn when no test project exists
-        if: steps.discover-tests.outputs.has_tests != 'true'
-        run: |
-          echo "No test project was found. Add a *Tests.csproj project to enable unit test execution."
