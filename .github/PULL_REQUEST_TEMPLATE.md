@@ -23,7 +23,7 @@
 - [ ] Manual/functional validation completed
 - [ ] All CI checks passed
 - [ ] Branch is up to date with target
-- [ ] Local build completed successfully
+- [ ] Local build completed successfullys
 - [ ] Local tests completed successfully
 
 ## Security Checks
