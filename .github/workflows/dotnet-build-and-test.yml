@@ -45,7 +45,7 @@ jobs:
 
           foreach ($solutionFile in $solutionFiles) {
             Write-Host "Checking formatting for $solutionFile"
-            dotnet format $solutionFile --verify-no-changes --configuration Release
+            dotnet format $solutionFile --verify-no-changes --no-restore
           }
 
       - name: Build all solutions
