@@ -1,0 +1,52 @@
+name: .NET Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - development
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Build all solutions
+        shell: pwsh
+        run: |
+          $solutionFiles = @(Get-ChildItem -Path . -Recurse -Filter '*.sln' | Select-Object -ExpandProperty FullName)
+
+          if ($solutionFiles.Count -eq 0) {
+            throw 'No solution files were found.'
+          }
+
+          foreach ($solutionFile in $solutionFiles) {
+            Write-Host "Restoring $solutionFile"
+            dotnet restore $solutionFile
+
+            Write-Host "Building $solutionFile"
+            dotnet build $solutionFile --configuration Release --no-restore
+          }
+
+      - name: Run all unit test projects
+        shell: pwsh
+        run: |
+          $testProjects = @(Get-ChildItem -Path . -Recurse -Filter '*Tests.csproj' | Select-Object -ExpandProperty FullName)
+
+          if ($testProjects.Count -eq 0) {
+            throw 'No test projects were found. Add at least one *Tests.csproj project.'
+          }
+
+          foreach ($testProject in $testProjects) {
+            Write-Host "Running tests for $testProject"
+            dotnet test $testProject --configuration Release --no-build
+          }
