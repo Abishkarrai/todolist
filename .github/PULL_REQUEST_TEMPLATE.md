@@ -1,7 +1,7 @@
 ## Summary
 - **Change type:** Feature / Fix / Refactor / Security / Infrastructure
 - **Description:**  
-- **Business context:**  
+- **Business Context:**  
 
 ## Work Item / Traceability
 - **Jira / Azure DevOps ID (required):**  
@@ -36,4 +36,5 @@
 - **Deployment steps:**  
 - **Feature flag required:** Yes / No
 - **Post-deployment checks:**  
+
 
