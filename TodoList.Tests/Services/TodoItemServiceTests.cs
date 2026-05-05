@@ -12,7 +12,7 @@ public sealed class TodoItemServiceTests
     [Test]
     public async Task CreateAsync_TrimsTitle_AndCreatesIncompleteItem()
     {
-        var repositoryMock = new Mock<ITodoItemRepository>(MockBehavior.Strict);
+        Mock<ITodoItemRepository> repositoryMock = new Mock<ITodoItemRepository>(MockBehavior.Strict);
         TodoItem? capturedItem = null;
 
         repositoryMock
@@ -20,17 +20,17 @@ public sealed class TodoItemServiceTests
             .Callback<TodoItem, CancellationToken>((item, _) => capturedItem = item)
             .Returns(Task.CompletedTask);
 
-        var service = new TodoItemService(repositoryMock.Object);
-        var before = DateTime.UtcNow;
+        TodoItemService service = new TodoItemService(repositoryMock.Object);
+        DateTime before = DateTime.UtcNow;
 
         await service.CreateAsync(
             new CreateTodoItemInputModel
             {
                 Title = "  Learn NUnit  "
             },
-            CancellationToken.None);
+            CancellationToken.None).ConfigureAwait(false);
 
-        var after = DateTime.UtcNow;
+        DateTime after = DateTime.UtcNow;
 
         Assert.That(capturedItem, Is.Not.Null);
         Assert.That(capturedItem!.Title, Is.EqualTo("Learn NUnit"));
@@ -43,8 +43,8 @@ public sealed class TodoItemServiceTests
     [Test]
     public async Task UpdateAsync_TrimsTitle_AndDelegatesToRepository()
     {
-        var repositoryMock = new Mock<ITodoItemRepository>(MockBehavior.Strict);
-        var input = new EditTodoItemInputModel
+        Mock<ITodoItemRepository> repositoryMock = new Mock<ITodoItemRepository>(MockBehavior.Strict);
+        EditTodoItemInputModel input = new EditTodoItemInputModel
         {
             Id = "0123456789abcdef01234567",
             Title = "  Updated title  "
@@ -54,9 +54,9 @@ public sealed class TodoItemServiceTests
             .Setup(repository => repository.UpdateTitleAsync(input.Id, "Updated title", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var service = new TodoItemService(repositoryMock.Object);
+        TodoItemService service = new TodoItemService(repositoryMock.Object);
 
-        var result = await service.UpdateAsync(input, CancellationToken.None);
+        bool result = await service.UpdateAsync(input, CancellationToken.None).ConfigureAwait(false);
 
         Assert.That(result, Is.True);
         repositoryMock.Verify(repository => repository.UpdateTitleAsync(input.Id, "Updated title", It.IsAny<CancellationToken>()), Times.Once);

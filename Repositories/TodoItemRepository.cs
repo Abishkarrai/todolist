@@ -12,7 +12,7 @@ public sealed class TodoItemRepository : ITodoItemRepository
 
     public TodoItemRepository(IMongoClient mongoClient, IOptions<MongoDbSettings> settings)
     {
-        var database = mongoClient.GetDatabase(settings.Value.DatabaseName);
+        IMongoDatabase database = mongoClient.GetDatabase(settings.Value.DatabaseName);
         _todoItems = database.GetCollection<TodoItem>(settings.Value.TodoCollectionName);
     }
 
@@ -21,7 +21,8 @@ public sealed class TodoItemRepository : ITodoItemRepository
         return await _todoItems
             .Find(Builders<TodoItem>.Filter.Empty)
             .SortByDescending(item => item.CreatedAtUtc)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<TodoItem?> GetByIdAsync(string id, CancellationToken cancellationToken)
@@ -33,7 +34,8 @@ public sealed class TodoItemRepository : ITodoItemRepository
 
         return await _todoItems
             .Find(todoItem => todoItem.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public Task CreateAsync(TodoItem item, CancellationToken cancellationToken)
@@ -48,11 +50,12 @@ public sealed class TodoItemRepository : ITodoItemRepository
             return false;
         }
 
-        var update = Builders<TodoItem>.Update.Set(todoItem => todoItem.Title, title);
-        var result = await _todoItems.UpdateOneAsync(
+        UpdateDefinition<TodoItem> update = Builders<TodoItem>.Update.Set(todoItem => todoItem.Title, title);
+        UpdateResult result = await _todoItems.UpdateOneAsync(
             todoItem => todoItem.Id == id,
             update,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         return result.MatchedCount > 0;
     }
@@ -64,9 +67,10 @@ public sealed class TodoItemRepository : ITodoItemRepository
             return false;
         }
 
-        var item = await _todoItems
+        TodoItem? item = await _todoItems
             .Find(todoItem => todoItem.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         if (item is null)
         {
@@ -75,10 +79,11 @@ public sealed class TodoItemRepository : ITodoItemRepository
 
         item.IsCompleted = !item.IsCompleted;
 
-        var result = await _todoItems.ReplaceOneAsync(
+        ReplaceOneResult result = await _todoItems.ReplaceOneAsync(
             todoItem => todoItem.Id == id,
             item,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ModifiedCount > 0;
     }
@@ -90,9 +95,10 @@ public sealed class TodoItemRepository : ITodoItemRepository
             return false;
         }
 
-        var result = await _todoItems.DeleteOneAsync(
+        DeleteResult result = await _todoItems.DeleteOneAsync(
             todoItem => todoItem.Id == id,
-            cancellationToken);
+            cancellationToken)
+            .ConfigureAwait(false);
 
         return result.DeletedCount > 0;
     }

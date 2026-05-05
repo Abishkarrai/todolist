@@ -17,14 +17,17 @@ public sealed class TasksController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var model = await BuildDashboardViewModelAsync(new CreateTodoItemInputModel(), cancellationToken);
+        TodoDashboardViewModel model = await BuildDashboardViewModelAsync(
+                new CreateTodoItemInputModel(),
+                cancellationToken)
+            .ConfigureAwait(false);
         return View(model);
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(string id, CancellationToken cancellationToken)
     {
-        var item = await _todoItemService.GetByIdAsync(id, cancellationToken);
+        TodoItem? item = await _todoItemService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (item is null)
         {
             return NotFound();
@@ -37,7 +40,7 @@ public sealed class TasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditTodoItemInputModel input, CancellationToken cancellationToken)
     {
-        var existingItem = await _todoItemService.GetByIdAsync(input.Id, cancellationToken);
+        TodoItem? existingItem = await _todoItemService.GetByIdAsync(input.Id, cancellationToken).ConfigureAwait(false);
         if (existingItem is null)
         {
             return NotFound();
@@ -48,7 +51,7 @@ public sealed class TasksController : Controller
             return View(BuildEditViewModel(existingItem, input));
         }
 
-        await _todoItemService.UpdateAsync(input, cancellationToken);
+        await _todoItemService.UpdateAsync(input, cancellationToken).ConfigureAwait(false);
         return RedirectToAction(nameof(Index));
     }
 
@@ -60,11 +63,12 @@ public sealed class TasksController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var invalidModel = await BuildDashboardViewModelAsync(input, cancellationToken);
+            TodoDashboardViewModel invalidModel = await BuildDashboardViewModelAsync(input, cancellationToken)
+                .ConfigureAwait(false);
             return View("Index", invalidModel);
         }
 
-        await _todoItemService.CreateAsync(input, cancellationToken);
+        await _todoItemService.CreateAsync(input, cancellationToken).ConfigureAwait(false);
         return RedirectToAction(nameof(Index));
     }
 
@@ -72,7 +76,7 @@ public sealed class TasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleCompleted(string id, CancellationToken cancellationToken)
     {
-        await _todoItemService.ToggleCompletedAsync(id, cancellationToken);
+        await _todoItemService.ToggleCompletedAsync(id, cancellationToken).ConfigureAwait(false);
         return RedirectToAction(nameof(Index));
     }
 
@@ -80,7 +84,7 @@ public sealed class TasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
-        await _todoItemService.DeleteAsync(id, cancellationToken);
+        await _todoItemService.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
         return RedirectToAction(nameof(Index));
     }
 
@@ -88,7 +92,8 @@ public sealed class TasksController : Controller
         CreateTodoItemInputModel input,
         CancellationToken cancellationToken)
     {
-        var items = await _todoItemService.GetDashboardItemsAsync(cancellationToken);
+        IReadOnlyList<TodoItem> items = await _todoItemService.GetDashboardItemsAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return new TodoDashboardViewModel
         {
