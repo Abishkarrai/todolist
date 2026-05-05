@@ -67,11 +67,6 @@ git diff origin/development...origin/<PR-source-branch> --name-status
 
 ### 3. Analyze Changed Files
 
-For each changed file, retrieve:
-- File path
-- File type (C#, XML, JSON, etc.)
-- Number of lines added/deleted
-- The complete diff with line numbers
 
 Focus on these critical file types:
 - `*.cs` (C# controllers, services, models, middleware, DI configuration)
